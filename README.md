@@ -41,9 +41,10 @@ pip install -r requirements.txt
 # macOS/Linux:         export SECRET_KEY="something-random"
 python app.py
 ```
-Open http://127.0.0.1:5000 on your own machine only — this address never works for anyone else.
-Register, and you're in. First run creates the database and seeds the curriculum + ~11,000 practice
-problems automatically (a second or two).
+Open the address shown in the terminal (Flask's default local dev server) in your browser —
+this only works on your own machine, never for anyone else. Register, and you're in. First run
+creates the database and seeds the curriculum + ~11,000 practice problems automatically (a second
+or two).
 
 > **Upgrading from an older M³ build?** The database schema changed again (discussion messages now
 > track an `edited` flag). Delete the old `mathmaxx.db` once before starting so the new column is
