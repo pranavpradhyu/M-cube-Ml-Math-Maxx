@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="narrow center">
+  <h1 style="font-size:3rem">M<sup>3</sup></h1>
+  <h2>404 — page not found</h2>
+  <p class="muted">That page doesn't exist.</p>
+  <a class="btn btn-primary" href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('login') }}">Go home</a>
+</div>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dash-grid">
+
+  <!-- LEFT: post / community feed -->
+  <aside class="feed">
+    <div class="feed-compose card">
+      <div class="card-title">📣 Post to the community</div>
+      <form method="post" action="{{ url_for('post_new') }}" enctype="multipart/form-data">
+        <textarea name="body" rows="2" placeholder="Share a thought, a question, or a problem…"></textarea>
+        <div class="compose-row">
+          <label class="attach-btn" title="Attach file, image, PDF or DOCX">📎
+            <input type="file" name="attachment"
+                   accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.zip">
+            <span class="attach-name" id="attachName"></span>
+          </label>
+          <button class="btn btn-primary" type="submit">Post</button>
+        </div>
+      </form>
+      <p class="muted tiny">Attach a file to share a problem with everyone. Adding a module/chapter/problem posts here automatically with a link.</p>
+    </div>
+
+    {% for post in posts %}
+      <div class="card post" id="post-{{ post.id }}">
+        <div class="post-head">
+          <span class="avatar-initials sm">{{ post.user.initials }}</span>
+          <strong>{{ post.user.first_name }}</strong>
+          {% if post.edited %}<span class="muted tiny">(edited)</span>{% endif %}
+          <span class="kind-tag {{ post.kind }}">{{ post.kind }}</span>
+          {% if post.user_id == current_user.id %}
+            <span class="post-tools">
+              <button class="icon-mini" title="Edit" onclick="editPost({{ post.id }})">✏️</button>
+              <form method="post" action="{{ url_for('post_delete', post_id=post.id) }}" style="display:inline"
+                    onsubmit="return confirm('Delete this post?')">
+                <button class="icon-mini" title="Delete" type="submit">🗑️</button>
+              </form>
+            </span>
+          {% endif %}
+        </div>
+
+        <div class="post-body" id="postbody-{{ post.id }}">{{ post.body }}</div>
+        <form method="post" action="{{ url_for('post_edit', post_id=post.id) }}"
+              id="editform-{{ post.id }}" class="edit-form hidden">
+          <textarea name="body" rows="2">{{ post.body }}</textarea>
+          <div class="compose-row">
+            <button class="btn btn-primary btn-sm" type="submit">Save</button>
+            <button class="btn btn-sm" type="button" onclick="cancelEdit({{ post.id }})">Cancel</button>
+          </div>
+        </form>
+
+        {% if post.attachment %}
+          {% set ext = post.attachment.rsplit('.',1)[-1]|lower %}
+          {% if ext in ['png','jpg','jpeg','gif','webp'] %}
+            <a href="{{ url_for('static', filename='uploads/' ~ post.attachment) }}" target="_blank">
+              <img class="post-img" src="{{ url_for('static', filename='uploads/' ~ post.attachment) }}" alt="attachment"></a>
+          {% else %}
+            <a class="file-chip" href="{{ url_for('static', filename='uploads/' ~ post.attachment) }}" target="_blank">
+              📄 {{ post.attachment_name or 'Download file' }}</a>
+          {% endif %}
+        {% endif %}
+
+        {% if post.problem_id %}
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('problem_view', pid=post.problem_id) }}">Open problem →</a>
+        {% elif post.module_id and post.module %}
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('module_view', key=post.module.key) }}">Open module →</a>
+        {% endif %}
+
+        <details class="replies">
+          <summary>{{ post.replies|length }} repl{{ 'y' if post.replies|length == 1 else 'ies' }}</summary>
+          {% for r in post.replies %}
+            <div class="reply"><strong>{{ r.user.first_name }}:</strong> {{ r.body }}</div>
+          {% endfor %}
+          <form method="post" action="{{ url_for('post_reply', post_id=post.id) }}" class="reply-form">
+            <input name="body" placeholder="Reply…" required>
+            <button class="btn btn-sm" type="submit">Send</button>
+          </form>
+        </details>
+      </div>
+    {% else %}
+      <div class="card muted">No posts yet — be the first!</div>
+    {% endfor %}
+  </aside>
+
+  <!-- RIGHT: modules -->
+  <section class="modules-col">
+    <div class="section-header">
+      <div>
+        <h1>Hi {{ current_user.first_name }} 👋</h1>
+        <p class="muted">Math for Machine Learning — choose a module to begin.</p>
+      </div>
+      <a class="btn btn-primary" href="{{ url_for('module_new') }}">＋ Add module</a>
+    </div>
+
+    <div class="streak-banner">
+      🔥 <strong>{{ current_user.streak_points }}</strong> streak points
+      {% if current_user.medal %}· {{ current_user.medal.icon }} <strong>{{ current_user.medal.name }}</strong>{% endif %}
+      {% if current_user.next_medal %}· {{ current_user.next_medal.remaining }} pts to {{ current_user.next_medal.icon }} {{ current_user.next_medal.name }}{% endif %}
+      · ✅ {{ current_user.problems_solved }} problems solved
+    </div>
+
+    {% for part, mods in parts.items() %}
+      <h2 class="part-title">{{ part }}</h2>
+      <div class="module-grid">
+        {% for m in mods %}
+          <div class="module-card">
+            <a href="{{ url_for('module_view', key=m.key) }}" class="module-link">
+              <div class="module-icon">{{ m.icon }}</div>
+              <div class="module-name">{{ m.title }}</div>
+              <div class="muted tiny">{{ m.description }}</div>
+              <div class="module-meta">{{ m.chapters|length }} chapters
+                {% if m.is_custom %}· <span class="custom-tag">custom</span>{% endif %}</div>
+            </a>
+            {% if m.is_custom %}
+            <div class="module-tools">
+              <a class="icon-mini" title="Edit module" href="{{ url_for('module_edit', key=m.key) }}">✏️</a>
+              <form method="post" action="{{ url_for('module_delete', key=m.key) }}" class="module-del"
+                    onsubmit="return confirm('Delete “{{ m.title }}” and ALL its chapters, problems and posts? This cannot be undone.')">
+                <button class="icon-mini" title="Delete module" type="submit">🗑️</button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  function editPost(id){document.getElementById('postbody-'+id).classList.add('hidden');
+    document.getElementById('editform-'+id).classList.remove('hidden');}
+  function cancelEdit(id){document.getElementById('postbody-'+id).classList.remove('hidden');
+    document.getElementById('editform-'+id).classList.add('hidden');}
+  var af=document.querySelector('input[name=attachment]');
+  if(af){af.addEventListener('change',function(){
+    document.getElementById('attachName').textContent=this.files[0]?this.files[0].name:'';});}
+</script>
+{% endblock %}

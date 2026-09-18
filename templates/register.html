@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block main_class %}auth-page{% endblock %}
+{% block content %}
+<div class="auth-hero small">
+  <h1 class="m3-title">M<sup>3</sup></h1>
+  <p class="m3-tag">Create your ML&nbsp;Math&nbsp;Maxx account</p>
+</div>
+<div class="auth-card">
+  <h2>Sign up</h2>
+  <form method="post" action="{{ url_for('register') }}">
+    <div class="row2">
+      <label>First name<input name="first_name" value="{{ form.first_name or '' }}" required autofocus></label>
+      <label>Last name<input name="last_name" value="{{ form.last_name or '' }}" required></label>
+    </div>
+    <label>Email<input type="email" name="email" value="{{ form.email or '' }}" placeholder="you@example.com" required></label>
+    <div class="row2">
+      <label>Password<input type="password" name="password" placeholder="min 6 characters" required></label>
+      <label>Confirm<input type="password" name="confirm_password" placeholder="repeat password" required></label>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit">Create account</button>
+  </form>
+  <p class="auth-alt">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+</div>
+{% endblock %}

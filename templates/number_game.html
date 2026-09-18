@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Number Game · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>⚡ Number Game</h1>
+  <p class="muted">Answer as many as you can before time runs out. Type the answer and press Enter.</p>
+
+  <div class="best-row">
+    <div class="best-chip">🌍 Global best: <strong id="globalBest">0</strong></div>
+    <div class="best-chip">🏅 Your best: <strong id="personalBest">0</strong></div>
+    <span class="muted tiny">for the selected difficulty &amp; time</span>
+  </div>
+
+  <div id="setup" class="card stack">
+    <div class="row2">
+      <label>Difficulty
+        <select id="level" onchange="refreshBest()">
+          <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
+        </select>
+      </label>
+      <label>Time limit
+        <div class="time-row">
+          <select id="timeVal" onchange="refreshBest()">
+            {% for s in range(1,61) %}<option value="{{ s }}" {{ 'selected' if s == 60 }}>{{ s }}</option>{% endfor %}
+          </select>
+          <select id="timeUnit" onchange="refreshBest()">
+            <option value="1" selected>seconds</option>
+            <option value="60">minutes</option>
+          </select>
+        </div>
+      </label>
+    </div>
+    <button class="btn btn-primary" onclick="startGame()">Start</button>
+  </div>
+
+  <div id="game" class="card game-card hidden">
+    <div class="game-top"><span>⏱ <span id="timer">0</span></span><span>Score: <span id="score">0</span></span></div>
+    <div id="question" class="game-q">—</div>
+    <input id="answer" class="game-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Your answer">
+    <div id="feedback" class="game-feedback"></div>
+  </div>
+
+  <div id="over" class="card hidden">
+    <h2>Time!</h2>
+    <p>You scored <strong id="finalScore">0</strong>.</p>
+    <p class="muted tiny">🌍 Global best: <span id="ovGlobal">0</span> · 🏅 Your best: <span id="ovPersonal">0</span></p>
+    <button class="btn btn-primary" onclick="location.reload()">Play again</button>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let score=0, remaining=0, timerId=null, current=null, level='easy', duration=60;
+function opts(){
+  const val=parseInt(document.getElementById('timeVal').value,10);
+  const unit=parseInt(document.getElementById('timeUnit').value,10); // 1=seconds, 60=minutes
+  return {level:document.getElementById('level').value, duration: val*unit};
+}
+function fmt(sec){
+  if(sec>=60){const m=Math.floor(sec/60), s=sec%60; return m+':'+String(s).padStart(2,'0');}
+  return String(sec)+'s';
+}
+async function refreshBest(){
+  const o=opts();
+  const r=await fetch('/api/number-game/best?level='+o.level+'&duration='+o.duration);
+  const d=await r.json();
+  document.getElementById('globalBest').textContent=d.global;
+  document.getElementById('personalBest').textContent=d.personal;
+}
+async function nextQ(){
+  const r=await fetch('/api/number-game/question?level='+level);
+  current=await r.json();
+  document.getElementById('question').textContent=current.text+' =';
+}
+function startGame(){
+  const o=opts(); level=o.level; duration=o.duration; remaining=duration; score=0;
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  document.getElementById('score').textContent='0';
+  document.getElementById('timer').textContent=fmt(remaining);
+  const ans=document.getElementById('answer'); ans.value=''; ans.focus();
+  nextQ();
+  timerId=setInterval(function(){remaining--; document.getElementById('timer').textContent=fmt(Math.max(0,remaining));
+    if(remaining<=0) endGame();},1000);
+}
+async function endGame(){
+  clearInterval(timerId);
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('over').classList.remove('hidden');
+  document.getElementById('finalScore').textContent=score;
+  const r=await fetch('/api/number-game/score',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({score:score,level:level,duration:duration})});
+  const d=await r.json();
+  document.getElementById('ovGlobal').textContent=d.global;
+  document.getElementById('ovPersonal').textContent=d.personal;
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&current&&!document.getElementById('game').classList.contains('hidden')){
+    const inp=document.getElementById('answer'); const fb=document.getElementById('feedback');
+    if(parseInt(inp.value,10)===current.answer){score++;document.getElementById('score').textContent=score;
+      fb.textContent='✓';fb.className='game-feedback ok';}
+    else{fb.textContent='✗ '+current.answer;fb.className='game-feedback no';}
+    inp.value=''; nextQ();
+  }
+});
+refreshBest();
+</script>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}{{ p.title }} · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="crumbs muted tiny">
+  <a href="{{ url_for('module_view', key=p.module.key) }}">{{ p.module.title }}</a> ›
+  <a href="{{ url_for('chapter_view', cid=p.chapter_id) }}">{{ p.chapter.title }}</a>
+</div>
+
+<div class="problem-head">
+  <h1>{{ p.title }}</h1>
+  <span class="diff-pill big" style="--c:{{ p.difficulty_color }}">{{ p.difficulty_label }}</span>
+  {% if solved %}<span class="solved-banner">✅ Completed</span>
+  {% else %}<span class="incomplete-banner">○ Incomplete</span>{% endif %}
+  {% if p.is_custom %}
+    <span class="post-tools">
+      <a class="icon-mini" title="Edit problem" href="{{ url_for('problem_edit', pid=p.id) }}">✏️</a>
+      <form method="post" action="{{ url_for('problem_delete', pid=p.id) }}" style="display:inline"
+            onsubmit="return confirm('Delete this problem? This cannot be undone.')">
+        <button class="icon-mini" title="Delete problem" type="submit">🗑️</button>
+      </form>
+    </span>
+  {% endif %}
+</div>
+<div class="muted tiny">Posted by {{ p.author.first_name if p.author else 'M³' }}</div>
+
+<div class="card statement">{{ p.statement }}</div>
+
+<!-- ============ SOLVE / ANSWER ============ -->
+<h2 id="editorial" class="section-title">✍️ Your answer</h2>
+<div class="card">
+  <form method="post" action="{{ url_for('problem_submit', pid=p.id) }}" enctype="multipart/form-data" class="stack">
+    <textarea name="body" rows="3" placeholder="{% if p.answer %}Type your final answer (it will be checked automatically)…{% else %}Type your solution / working…{% endif %}"></textarea>
+    <label class="file-label">📎 Attach solution PDF (optional)<input type="file" name="pdf" accept="application/pdf"></label>
+    <button class="btn btn-primary" type="submit">Submit answer</button>
+    {% if p.answer %}<span class="muted tiny">This problem is auto-checked. A correct answer turns it green and marks it complete.</span>{% endif %}
+  </form>
+</div>
+
+{% for s in p.submissions %}
+  <div class="card submission {{ 'correct' if s.is_correct }}">
+    <div class="post-head">
+      <span class="avatar-initials sm">{{ s.user.initials }}</span>
+      <strong>{{ s.user.first_name }}</strong>
+      {% if s.is_correct %}<span class="correct-badge">✅ Verified correct</span>{% endif %}
+      {% if s.user_id == current_user.id %}
+        <form method="post" action="{{ url_for('submission_delete', sid=s.id) }}" style="margin-left:auto"
+              onsubmit="return confirm('Delete your answer?')">
+          <button class="icon-mini" title="Delete answer" type="submit">🗑️</button>
+        </form>
+      {% endif %}
+    </div>
+    {% if s.body %}<div class="solution-text">{{ s.body }}</div>{% endif %}
+    {% if s.pdf %}<a class="btn btn-ghost btn-sm" href="{{ url_for('static', filename='uploads/' ~ s.pdf) }}" target="_blank">📄 View PDF</a>{% endif %}
+  </div>
+{% endfor %}
+
+<!-- ============ EDITORIAL (locked) ============ -->
+<h2 class="section-title">📝 Editorial</h2>
+{% if p.official_editorial %}
+  {% if unlocked %}
+    <div class="card editorial-official">
+      <div class="tag">Step-by-step solution</div>
+      <div class="solution-text">{{ p.official_editorial }}</div>
+    </div>
+  {% else %}
+    <div class="card editorial-locked">
+      <div class="lock-row">🔒 <strong>Editorial is locked.</strong></div>
+      <p class="muted">Opening the editorial costs <strong>10 streak points</strong>. Try solving it first!</p>
+      <form method="post" action="{{ url_for('editorial_unlock', pid=p.id) }}"
+            onsubmit="return confirm('Unlock the editorial for −10 streak points?')">
+        <button class="btn btn-primary btn-sm" type="submit">🔓 Unlock editorial (−10 pts)</button>
+      </form>
+    </div>
+  {% endif %}
+{% else %}
+  <div class="card muted">No official editorial for this problem yet.</div>
+{% endif %}
+
+<!-- ============ DISCUSSION ============ -->
+<h2 id="discussion" class="section-title">💬 Discussion</h2>
+<div class="discussion">
+  {% for m in p.messages %}
+    <div class="chat-msg {{ 'mine' if m.user_id == current_user.id else '' }}" id="msg-{{ m.id }}">
+      <div class="chat-meta">
+        <strong>{{ m.user.first_name }}</strong>
+        {% if m.edited %}<span class="muted tiny">(edited)</span>{% endif %}
+        {% if m.user_id == current_user.id %}
+          <span class="post-tools">
+            <button class="icon-mini" title="Edit" onclick="editMsg({{ m.id }})">✏️</button>
+            <form method="post" action="{{ url_for('discussion_delete', mid=m.id) }}" style="display:inline"
+                  onsubmit="return confirm('Delete this message?')">
+              <button class="icon-mini" title="Delete" type="submit">🗑️</button>
+            </form>
+          </span>
+        {% endif %}
+      </div>
+      <div id="msgbody-{{ m.id }}">
+        {% if m.body %}<div class="chat-body">{{ m.body }}</div>{% endif %}
+        {% if m.image %}<a href="{{ url_for('static', filename='uploads/' ~ m.image) }}" target="_blank">
+          <img class="chat-img" src="{{ url_for('static', filename='uploads/' ~ m.image) }}" alt="shared"></a>{% endif %}
+      </div>
+      {% if m.user_id == current_user.id %}
+        <form method="post" action="{{ url_for('discussion_edit', mid=m.id) }}" id="msgedit-{{ m.id }}" class="edit-form hidden">
+          <input name="body" value="{{ m.body }}" placeholder="Message…">
+          <div class="compose-row">
+            <button class="btn btn-primary btn-sm" type="submit">Save</button>
+            <button class="btn btn-sm" type="button" onclick="cancelEditMsg({{ m.id }})">Cancel</button>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+  {% else %}<p class="muted tiny">No discussion yet. Start the conversation.</p>{% endfor %}
+</div>
+<form method="post" action="{{ url_for('problem_discuss', pid=p.id) }}" enctype="multipart/form-data" class="chat-compose">
+  <input name="body" placeholder="Message…">
+  <label class="icon-file" title="Attach image">📷<input type="file" name="image" accept="image/*"></label>
+  <button class="btn btn-primary" type="submit">Send</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+function editMsg(id){document.getElementById('msgbody-'+id).classList.add('hidden');
+  document.getElementById('msgedit-'+id).classList.remove('hidden');}
+function cancelEditMsg(id){document.getElementById('msgbody-'+id).classList.remove('hidden');
+  document.getElementById('msgedit-'+id).classList.add('hidden');}
+</script>
+{% endblock %}

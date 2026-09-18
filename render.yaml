@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: ml-math-maxx
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      # Optional: set these in the Render dashboard to enable EMAIL notifications
+      # (in-app bell notifications work without them). Add as secrets, do NOT commit.
+      # - key: SMTP_HOST     # e.g. smtp.gmail.com
+      # - key: SMTP_PORT     # 587 (STARTTLS) or 465 (SSL)
+      # - key: SMTP_USER     # your email address
+      # - key: SMTP_PASS     # app password
+      # - key: MAIL_FROM     # optional, defaults to SMTP_USER
+      # - key: APP_BASE_URL  # optional, e.g. https://ml-math-maxx.onrender.com
+      #
+      # Optional: attach a Render Postgres instance and set DATABASE_URL for a
+      # persistent database (defaults to local SQLite otherwise).
+      # - key: DATABASE_URL

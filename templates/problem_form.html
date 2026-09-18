@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit problem' if p else 'New problem' }} · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>{{ 'Edit problem' if p else 'Post a problem' }}</h1>
+  <p class="muted">In <strong>{{ ch.module.title }}</strong> → {{ ch.title }}</p>
+  <form method="post" action="{{ url_for('problem_edit', pid=p.id) if p else url_for('problem_new', cid=ch.id) }}" class="card stack">
+    <label>Title<input name="title" placeholder="Short problem title" value="{{ p.title if p else '' }}" required></label>
+    <label>Problem statement<textarea name="statement" rows="4" placeholder="Write the full problem. $LaTeX$ supported." required>{{ p.statement if p else '' }}</textarea></label>
+    <div class="row2">
+      <label>Difficulty
+        <select name="difficulty">
+          {% set cur = p.difficulty if p else 'medium' %}
+          <option value="easy" {{ 'selected' if cur == 'easy' }}>Easy</option>
+          <option value="medium" {{ 'selected' if cur == 'medium' }}>Medium</option>
+          <option value="hard" {{ 'selected' if cur == 'hard' }}>Hard</option>
+        </select>
+      </label>
+      <label>Expected answer (optional — enables auto-check)<input name="answer" placeholder="e.g. 42" value="{{ p.answer if p and p.answer else '' }}"></label>
+    </div>
+    <label>Editorial — step-by-step solution (locked for others)
+      <textarea name="editorial" rows="4" placeholder="The worked solution shown in the (locked) editorial section.">{{ p.official_editorial if p else '' }}</textarea></label>
+    <div class="compose-row">
+      <button class="btn btn-primary" type="submit">{{ 'Save changes' if p else 'Post problem' }}</button>
+      {% if p %}<a class="btn btn-ghost" href="{{ url_for('problem_view', pid=p.id) }}">Cancel</a>{% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

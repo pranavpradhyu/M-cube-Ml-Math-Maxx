@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Edit chapter · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="narrow">
+  <div class="crumbs muted tiny"><a href="{{ url_for('module_view', key=ch.module.key) }}">{{ ch.module.title }}</a> › Edit chapter</div>
+  <h1>Edit chapter</h1>
+  <form method="post" action="{{ url_for('chapter_edit', cid=ch.id) }}" class="card stack">
+    <label>Title<input name="title" value="{{ ch.title }}" required></label>
+    <label>Notes / content ($LaTeX$ supported)<textarea name="content" rows="3">{{ ch.content }}</textarea></label>
+    <div class="compose-row">
+      <button class="btn btn-primary" type="submit">Save changes</button>
+      <a class="btn btn-ghost" href="{{ url_for('module_view', key=ch.module.key) }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

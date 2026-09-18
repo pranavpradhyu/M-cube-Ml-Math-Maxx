@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ ch.title }} · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="crumbs muted tiny"><a href="{{ url_for('module_view', key=ch.module.key) }}">{{ ch.module.title }}</a> › {{ ch.title }}</div>
+<div class="section-header">
+  <h1>{{ ch.title }}</h1>
+  <div class="chapter-actions">
+    {% if ch.is_custom %}
+      <a class="icon-mini" title="Edit chapter" href="{{ url_for('chapter_edit', cid=ch.id) }}">✏️</a>
+      <form method="post" action="{{ url_for('chapter_delete', cid=ch.id) }}" style="display:inline"
+            onsubmit="return confirm('Delete chapter “{{ ch.title }}” and all its problems? This cannot be undone.')">
+        <button class="icon-mini" title="Delete chapter" type="submit">🗑️</button>
+      </form>
+    {% endif %}
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('problem_new', cid=ch.id) }}">＋ Add problem</a>
+  </div>
+</div>
+
+<div class="diff-filter" style="margin-bottom:14px">
+  <span class="muted tiny">Difficulty:</span>
+  {% for d, label in [('all','All'),('easy','Easy'),('medium','Medium'),('hard','Hard')] %}
+    <a class="chip {{ 'active' if diff == d }}" href="{{ url_for('chapter_view', cid=ch.id, difficulty=d) }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div class="muted tiny" style="margin-bottom:8px">{{ total }} problems</div>
+  <ul class="problem-list">
+    {% for p in probs %}
+      <li>
+        {% if p.id in solved %}<span class="solved-tick">✅</span>{% else %}<span class="open-dot">○</span>{% endif %}
+        <a href="{{ url_for('problem_view', pid=p.id) }}">{{ p.title }}</a>
+        <span class="diff-pill" style="--c:{{ p.difficulty_color }}">{{ p.difficulty_label }}</span>
+        {% if p.is_custom %}
+          <a class="icon-mini" title="Edit problem" href="{{ url_for('problem_edit', pid=p.id) }}">✏️</a>
+          <form method="post" action="{{ url_for('problem_delete', pid=p.id) }}" style="display:inline"
+                onsubmit="return confirm('Delete this problem?')">
+            <button class="icon-mini" title="Delete problem" type="submit">🗑️</button>
+          </form>
+        {% endif %}
+      </li>
+    {% else %}<li class="muted">No problems.</li>{% endfor %}
+  </ul>
+</div>
+
+{% if pages > 1 %}
+<div class="pager">
+  {% if page > 1 %}<a class="btn btn-sm" href="{{ url_for('chapter_view', cid=ch.id, difficulty=diff, page=page-1) }}">← Prev</a>{% endif %}
+  <span class="muted tiny">Page {{ page }} of {{ pages }}</span>
+  {% if page < pages %}<a class="btn btn-sm" href="{{ url_for('chapter_view', cid=ch.id, difficulty=diff, page=page+1) }}">Next →</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

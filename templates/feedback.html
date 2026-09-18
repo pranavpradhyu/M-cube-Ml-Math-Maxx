@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Feedback · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>💬 Feedback</h1>
+  <form method="post" action="{{ url_for('feedback') }}" class="card stack">
+    <div class="stars" id="stars">
+      {% for i in range(1,6) %}<span data-v="{{ i }}" onclick="setStars({{ i }})">★</span>{% endfor %}
+    </div>
+    <input type="hidden" name="rating" id="rating" value="5">
+    <label>Category
+      <select name="category">
+        <option value="general">General</option><option value="content">Content</option>
+        <option value="bug">Bug</option><option value="feature">Feature request</option>
+      </select>
+    </label>
+    <textarea name="body" rows="3" placeholder="Tell us what you think…" required></textarea>
+    <button class="btn btn-primary" type="submit">Send feedback</button>
+  </form>
+
+  <h2 class="section-title">Recent feedback</h2>
+  {% for f in items %}
+    <div class="card" id="fb-{{ f.id }}">
+      <div class="post-head">
+        <span class="avatar-initials sm">{{ f.user.initials }}</span>
+        <strong>{{ f.user.first_name }}</strong>
+        <span class="stars-static">{{ '★' * f.rating }}{{ '☆' * (5 - f.rating) }}</span>
+        <span class="kind-tag note">{{ f.category }}</span>
+        {% if f.user_id == current_user.id %}
+          <span class="post-tools">
+            <button class="icon-mini" title="Edit" onclick="editFb({{ f.id }})">✏️</button>
+            <form method="post" action="{{ url_for('feedback_delete', fid=f.id) }}" style="display:inline"
+                  onsubmit="return confirm('Delete your feedback?')">
+              <button class="icon-mini" title="Delete" type="submit">🗑️</button>
+            </form>
+          </span>
+        {% endif %}
+      </div>
+
+      <div class="post-body" id="fbbody-{{ f.id }}">{{ f.body }}</div>
+      <form method="post" action="{{ url_for('feedback_edit', fid=f.id) }}" id="fbedit-{{ f.id }}" class="edit-form hidden">
+        <div class="stars" id="fbstars-{{ f.id }}">
+          {% for i in range(1,6) %}<span data-v="{{ i }}" class="{{ 'on' if i <= f.rating }}"
+            onclick="setFbStars({{ f.id }},{{ i }})">★</span>{% endfor %}
+        </div>
+        <input type="hidden" name="rating" id="fbrating-{{ f.id }}" value="{{ f.rating }}">
+        <select name="category">
+          {% for c in ['general','content','bug','feature'] %}
+            <option value="{{ c }}" {{ 'selected' if c == f.category }}>{{ c|capitalize }}</option>
+          {% endfor %}
+        </select>
+        <textarea name="body" rows="2">{{ f.body }}</textarea>
+        <div class="compose-row">
+          <button class="btn btn-primary btn-sm" type="submit">Save</button>
+          <button class="btn btn-sm" type="button" onclick="cancelFbEdit({{ f.id }})">Cancel</button>
+        </div>
+      </form>
+
+      {% for r in f.replies %}
+        <div class="reply"><strong>{{ r.user.first_name }}:</strong> {{ r.body }}</div>
+      {% endfor %}
+      <form method="post" action="{{ url_for('feedback_reply', fid=f.id) }}" class="reply-form">
+        <input name="body" placeholder="Reply…" required><button class="btn btn-sm" type="submit">Reply</button>
+      </form>
+    </div>
+  {% else %}<div class="card muted">No feedback yet.</div>{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function setStars(v){document.getElementById('rating').value=v;
+  document.querySelectorAll('#stars span').forEach(function(s){
+    s.classList.toggle('on', parseInt(s.dataset.v,10)<=v);});}
+setStars(5);
+function setFbStars(id,v){document.getElementById('fbrating-'+id).value=v;
+  document.querySelectorAll('#fbstars-'+id+' span').forEach(function(s){
+    s.classList.toggle('on', parseInt(s.dataset.v,10)<=v);});}
+function editFb(id){document.getElementById('fbbody-'+id).classList.add('hidden');
+  document.getElementById('fbedit-'+id).classList.remove('hidden');}
+function cancelFbEdit(id){document.getElementById('fbbody-'+id).classList.remove('hidden');
+  document.getElementById('fbedit-'+id).classList.add('hidden');}
+</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ m.title }} · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="module-hero">
+  <div class="module-hero-icon">{{ m.icon }}</div>
+  <div style="flex:1">
+    <div class="muted tiny">{{ m.part }}</div>
+    <h1>{{ m.title }}</h1>
+    <p class="muted">{{ m.description }}</p>
+  </div>
+  {% if m.is_custom %}
+  <div class="hero-tools">
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('module_edit', key=m.key) }}">✏️ Edit module</a>
+    <form method="post" action="{{ url_for('module_delete', key=m.key) }}"
+          onsubmit="return confirm('Delete “{{ m.title }}” and ALL its chapters, problems and posts? This cannot be undone.')">
+      <button class="btn btn-ghost btn-sm danger-btn" type="submit">🗑️ Delete module</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+
+<div class="toolbar">
+  <div class="diff-filter">
+    <span class="muted tiny">Difficulty:</span>
+    {% for d, label in [('all','All'),('easy','Easy'),('medium','Medium'),('hard','Hard')] %}
+      <a class="chip {{ 'active' if diff == d }}" href="{{ url_for('module_view', key=m.key, difficulty=d) }}">{{ label }}</a>
+    {% endfor %}
+  </div>
+  <details class="inline-form">
+    <summary class="btn btn-ghost btn-sm">＋ Add chapter</summary>
+    <form method="post" action="{{ url_for('chapter_new', key=m.key) }}" class="stack">
+      <input name="title" placeholder="Chapter / topic title" required>
+      <textarea name="content" rows="2" placeholder="Optional notes ($LaTeX$ supported)"></textarea>
+      <button class="btn btn-primary btn-sm" type="submit">Create chapter</button>
+    </form>
+  </details>
+</div>
+
+{% for row in chapters %}
+  <div class="chapter card">
+    <div class="chapter-head">
+      <h3>{{ row.chapter.title }}</h3>
+      <div class="chapter-actions">
+        <span class="progress-badge">{{ row.solved_here }} / {{ row.count_all }} solved</span>
+        {% if row.chapter.is_custom %}
+          <a class="icon-mini" title="Edit chapter" href="{{ url_for('chapter_edit', cid=row.chapter.id) }}">✏️</a>
+          <form method="post" action="{{ url_for('chapter_delete', cid=row.chapter.id) }}" style="display:inline"
+                onsubmit="return confirm('Delete chapter “{{ row.chapter.title }}” and all its problems? This cannot be undone.')">
+            <button class="icon-mini" title="Delete chapter" type="submit">🗑️</button>
+          </form>
+        {% endif %}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('problem_new', cid=row.chapter.id) }}">＋ Problem</a>
+      </div>
+    </div>
+    {% if row.chapter.content %}<div class="chapter-note">{{ row.chapter.content }}</div>{% endif %}
+
+    {% if row.problems %}
+      <ul class="problem-list">
+        {% for p in row.problems %}
+          <li>
+            {% if p.id in solved %}<span class="solved-tick" title="Solved">✅</span>{% else %}<span class="open-dot" title="Incomplete">○</span>{% endif %}
+            <a href="{{ url_for('problem_view', pid=p.id) }}">{{ p.title }}</a>
+            <span class="diff-pill" style="--c:{{ p.difficulty_color }}">{{ p.difficulty_label }}</span>
+            {% if p.is_custom %}
+              <a class="icon-mini" title="Edit problem" href="{{ url_for('problem_edit', pid=p.id) }}">✏️</a>
+              <form method="post" action="{{ url_for('problem_delete', pid=p.id) }}" style="display:inline"
+                    onsubmit="return confirm('Delete this problem?')">
+                <button class="icon-mini" title="Delete problem" type="submit">🗑️</button>
+              </form>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      {% if row.total > row.problems|length %}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('chapter_view', cid=row.chapter.id, difficulty=diff) }}">
+          View all {{ row.total }} {{ diff if diff != 'all' else '' }} problems →</a>
+      {% endif %}
+    {% else %}
+      <p class="muted tiny">No {{ diff if diff != 'all' else '' }} problems here yet — add one.</p>
+    {% endif %}
+  </div>
+{% else %}
+  <div class="card muted">This module has no chapters yet. Add the first one above.</div>
+{% endfor %}
+{% endblock %}

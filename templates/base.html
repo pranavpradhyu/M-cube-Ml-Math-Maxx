@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }} · {{ app_full }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>
+    (function () {
+      try { var t = localStorage.getItem('m3-theme');
+        if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+    })();
+  </script>
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] },
+                       svg: { fontCache: 'global' } };
+  </script>
+  <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="{{ url_for('dashboard') }}" class="brand" title="ML Math Maxx">
+      <span class="brand-m">M<sup>3</sup></span>
+      <span class="brand-sub">ML&nbsp;Math&nbsp;Maxx</span>
+    </a>
+    <button class="hamburger" onclick="document.querySelector('.mainnav').classList.toggle('open')" aria-label="Menu">☰</button>
+    <nav class="mainnav">
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+      <a href="{{ url_for('number_game') }}">Number Game</a>
+      <a href="{{ url_for('feedback') }}">Feedback</a>
+    </nav>
+    <div class="topbar-right">
+      <button class="icon-btn" onclick="toggleTheme()" title="Toggle light / dark" aria-label="Toggle theme">
+        <span class="theme-light">🌙</span><span class="theme-dark">☀️</span>
+      </button>
+      <div class="dropdown" id="bellDrop">
+        <button class="icon-btn" onclick="toggleDrop('bellDrop')" aria-label="Notifications">
+          🔔{% if unread_count %}<span class="badge">{{ unread_count }}</span>{% endif %}
+        </button>
+        <div class="dropdown-menu">
+          <div class="dropdown-head"><span>Notifications</span>
+            <a href="{{ url_for('notifications_read') }}" class="small-link">Mark all read</a></div>
+          {% for n in recent_notes %}
+            <a class="note-item {{ 'unread' if not n.is_read }}" href="{{ n.link or url_for('notifications') }}">
+              <div>{{ n.message }}</div>
+              <div class="muted tiny">{{ n.created_at.strftime('%d %b, %H:%M') }}</div></a>
+          {% else %}
+            <div class="note-item muted">No notifications yet.</div>
+          {% endfor %}
+          <a class="dropdown-foot" href="{{ url_for('notifications') }}">See all</a>
+        </div>
+      </div>
+      <div class="dropdown" id="profDrop">
+        <button class="avatar-btn" onclick="toggleDrop('profDrop')" aria-label="Profile">
+          {% if current_user.photo %}
+            <img src="{{ url_for('static', filename='uploads/' ~ current_user.photo) }}" alt="me">
+          {% else %}<span class="avatar-initials">{{ current_user.initials }}</span>{% endif %}
+        </button>
+        <div class="dropdown-menu right">
+          <div class="prof-head"><strong>{{ current_user.full_name }}</strong>
+            <div class="muted tiny">{{ current_user.email }}</div>
+            <div class="streak-chip">🔥 {{ current_user.streak_points }} pts
+              {% if current_user.medal %}· {{ current_user.medal.icon }} {{ current_user.medal.name }}{% endif %}</div>
+          </div>
+          <a class="drop-link" href="{{ url_for('profile') }}">👤 My profile</a>
+          <a class="drop-link" href="{{ url_for('notifications') }}">🔔 Notifications</a>
+          <a class="drop-link danger" href="{{ url_for('logout') }}">↩ Log out</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+{% endif %}
+<main class="{% block main_class %}wrap{% endblock %}">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<div class="flashes">
+      {% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+    </div>{% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+<script>
+  function toggleTheme() {
+    var el = document.documentElement;
+    var next = el.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    el.setAttribute('data-theme', next);
+    try { localStorage.setItem('m3-theme', next); } catch (e) {}
+  }
+  function toggleDrop(id) {
+    var d = document.getElementById(id);
+    document.querySelectorAll('.dropdown').forEach(function (x) { if (x.id !== id) x.classList.remove('open'); });
+    d.classList.toggle('open');
+  }
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.dropdown'))
+      document.querySelectorAll('.dropdown').forEach(function (x) { x.classList.remove('open'); });
+  });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

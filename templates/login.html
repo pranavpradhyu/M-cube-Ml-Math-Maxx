@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block main_class %}auth-page{% endblock %}
+{% block content %}
+<div class="auth-hero">
+  <!-- vibrating brain bursting with math -->
+  <div class="brain-stage">
+    <div class="brain-wrap">
+      <svg class="brain" viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <radialGradient id="bg" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#6d28d9"/>
+          </radialGradient>
+        </defs>
+        <path fill="url(#bg)" stroke="#ede9fe" stroke-width="2" d="
+          M100 18 C74 6 44 16 40 42 C18 46 14 78 32 90 C18 104 30 138 56 136
+          C64 158 108 160 116 138 C150 146 174 112 156 92 C176 78 168 44 144 42
+          C142 16 120 8 100 18 Z"/>
+        <path fill="none" stroke="#ede9fe" stroke-width="2" opacity=".8" d="
+          M100 26 C96 54 108 60 100 84 C92 104 110 116 100 140
+          M78 44 C90 56 74 72 86 86 M124 46 C112 60 128 74 116 88
+          M64 70 C80 74 78 92 66 100 M138 70 C122 76 124 92 138 100"/>
+      </svg>
+      <!-- formula particles that burst outward -->
+      <div class="particles">
+        <span style="--a:-140deg;--d:.0s">∑</span><span style="--a:-100deg;--d:.15s">π</span>
+        <span style="--a:-60deg;--d:.3s">∫</span><span style="--a:-20deg;--d:.1s">λ</span>
+        <span style="--a:20deg;--d:.25s">∇</span><span style="--a:60deg;--d:.05s">σ</span>
+        <span style="--a:100deg;--d:.2s">θ</span><span style="--a:140deg;--d:.35s">√</span>
+        <span style="--a:170deg;--d:.12s">∞</span><span style="--a:-170deg;--d:.28s">Σ</span>
+        <span style="--a:-40deg;--d:.4s">eˣ</span><span style="--a:45deg;--d:.45s">Aᵀ</span>
+      </div>
+    </div>
+  </div>
+  <h1 class="m3-title">M<sup>3</sup></h1>
+  <p class="m3-tag">ML&nbsp;Math&nbsp;Maxx — master the math behind machine learning</p>
+</div>
+
+<div class="auth-card reveal">
+  <h2>Welcome back</h2>
+  <form method="post" action="{{ url_for('login') }}">
+    <label>Email
+      <input type="email" name="email" placeholder="you@example.com" required autofocus>
+    </label>
+    <label>Password
+      <input type="password" name="password" placeholder="••••••••" required>
+    </label>
+    <button class="btn btn-primary btn-block" type="submit">Log in</button>
+  </form>
+  <p class="auth-alt">New here? <a href="{{ url_for('register') }}">Create an account</a></p>
+</div>
+{% endblock %}

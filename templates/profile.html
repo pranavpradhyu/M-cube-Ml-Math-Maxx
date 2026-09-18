@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}My profile · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="narrow">
+  <div class="profile-top card">
+    <div class="profile-avatar">
+      {% if user.photo %}<img src="{{ url_for('static', filename='uploads/' ~ user.photo) }}" alt="me">
+      {% else %}<span class="avatar-initials xl">{{ user.initials }}</span>{% endif %}
+    </div>
+    <div class="profile-info">
+      <h1>{{ user.full_name }}</h1>
+      <div class="streak-chip big">🔥 {{ user.streak_points }} streak points</div>
+      <div class="medal-line">
+        {% if user.medal %}Current: {{ user.medal.icon }} <strong>{{ user.medal.name }}</strong>{% else %}No medal yet{% endif %}
+        {% if user.next_medal %} · {{ user.next_medal.remaining }} pts to {{ user.next_medal.icon }} {{ user.next_medal.name }}{% endif %}
+      </div>
+      <div class="muted tiny">{{ user.email }} · ✅ {{ user.problems_solved }} problems solved · {{ user.modules_completed }} modules touched</div>
+    </div>
+  </div>
+
+  <div class="medal-ladder card">
+    <div class="card-title">🏅 Medals</div>
+    <div class="ladder">
+      {% for threshold, name, icon in medals %}
+        <div class="ladder-item {{ 'earned' if user.streak_points >= threshold else '' }}">
+          <div class="ladder-icon">{{ icon }}</div>
+          <div><strong>{{ name }}</strong><div class="muted tiny">{{ threshold }} pts</div></div>
+        </div>
+      {% endfor %}
+    </div>
+    <p class="muted tiny">Complete a chapter to earn +100 points. 1000 → Silver, 5000 → Gold, 10000 → Platinum.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Edit profile</div>
+    <form method="post" action="{{ url_for('profile_edit') }}" enctype="multipart/form-data" class="stack">
+      <div class="row2">
+        <label>First name<input name="first_name" value="{{ user.first_name }}"></label>
+        <label>Last name<input name="last_name" value="{{ user.last_name }}"></label>
+      </div>
+      <label>Email<input type="email" name="email" value="{{ user.email }}"></label>
+      <label class="file-label">🖼 Profile photo<input type="file" name="photo" accept="image/*"></label>
+      <button class="btn btn-primary" type="submit">Save changes</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-title">My recent posts</div>
+    {% for post in my_posts %}
+      <div class="mini-post"><span class="kind-tag {{ post.kind }}">{{ post.kind }}</span> {{ post.body }}</div>
+    {% else %}<p class="muted tiny">No posts yet.</p>{% endfor %}
+  </div>
+</div>
+{% endblock %}

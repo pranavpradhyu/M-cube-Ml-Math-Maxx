@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit module' if m else 'New module' }} · {{ app_name }}{% endblock %}
+{% block content %}
+<div class="narrow">
+  <h1>{{ 'Edit module' if m else 'Add a module' }}</h1>
+  {% if not m %}<p class="muted">Create your own module. It will appear on the dashboard and post to the feed.</p>{% endif %}
+  <form method="post" action="{{ url_for('module_edit', key=m.key) if m else url_for('module_new') }}" class="card stack">
+    <label>Title<input name="title" placeholder="e.g. Information Theory" value="{{ m.title if m else '' }}" required></label>
+    <div class="row2">
+      <label>Icon (emoji)<input name="icon" placeholder="📗" maxlength="8" value="{{ m.icon if m else '' }}"></label>
+      <label>Section<input name="part" placeholder="e.g. Mathematical Foundations" value="{{ m.part if m else 'Custom' }}"></label>
+    </div>
+    <label>Description<textarea name="description" rows="2" placeholder="One line about this module">{{ m.description if m else '' }}</textarea></label>
+    <button class="btn btn-primary" type="submit">{{ 'Save changes' if m else 'Create module' }}</button>
+  </form>
+</div>
+{% endblock %}
