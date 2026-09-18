@@ -1,5 +1,7 @@
 # M³ — ML Math Maxx
 
+🌐 **Live app:** https://m-cube-ml-math-maxx.onrender.com
+
 A community platform for learning the **mathematics behind machine learning**, built with
 Flask. Modules, chapters and problems are seeded from *Mathematics for Machine Learning*
 (Deisenroth, Faisal & Ong, 2020) and can be extended by any user. Problems use free-text
@@ -29,7 +31,7 @@ answers (no MCQs), each with a difficulty level, a **locked editorial**, and a p
 - **Notifications** — bell icon (in-app) plus **optional email** on new posts, discussion replies and feedback replies.
 - **Light / dark toggle**, and a **mobile-responsive** layout.
 
-## Run locally
+## Run locally (for development — the public link above is the one to share)
 ```bash
 cd mathmaxx
 python -m venv venv
@@ -39,8 +41,9 @@ pip install -r requirements.txt
 # macOS/Linux:         export SECRET_KEY="something-random"
 python app.py
 ```
-Open http://127.0.0.1:5000, register, and you're in. First run creates the database and seeds the
-curriculum + ~11,000 practice problems automatically (a second or two).
+Open http://127.0.0.1:5000 on your own machine only — this address never works for anyone else.
+Register, and you're in. First run creates the database and seeds the curriculum + ~11,000 practice
+problems automatically (a second or two).
 
 > **Upgrading from an older M³ build?** The database schema changed again (discussion messages now
 > track an `edited` flag). Delete the old `mathmaxx.db` once before starting so the new column is
@@ -52,11 +55,16 @@ In-app bell notifications always work. To also send **email**, set these environ
 starting (e.g. a Gmail App Password): `SMTP_HOST`, `SMTP_PORT` (587 STARTTLS or 465 SSL), `SMTP_USER`,
 `SMTP_PASS`, and optionally `MAIL_FROM` and `APP_BASE_URL`. If unset, email is skipped silently.
 
-## Deploy (GitHub + Render)
-Push the folder to your repo and create a Render **Web Service** (`render.yaml` + `Procfile` included).
-Set `SECRET_KEY`; add a Postgres instance and `DATABASE_URL` for a persistent database. On the free tier,
-uploaded files (photos, PDFs, images, post attachments) sit on ephemeral disk and clear on restart — use a
-persistent disk or object storage to keep them.
+## Deploy (already live on Render)
+This app is deployed at https://m-cube-ml-math-maxx.onrender.com via a Render **Web Service**
+connected to this GitHub repo (`render.yaml` + `Procfile` define the build/start commands). Render
+**auto-deploys**: any `git push` to the connected branch triggers a fresh build automatically — no
+manual redeploy step needed. `SECRET_KEY` is set on Render's dashboard (Environment tab), not in code.
+
+On the free tier, the SQLite database and any uploaded files (photos, PDFs, post attachments) sit on
+ephemeral disk and reset on every redeploy/restart. For data that survives restarts, add a Render
+**PostgreSQL** instance and set `DATABASE_URL` on the web service to the connection string it gives you
+— the app auto-detects and uses it.
 
 ## Notes on the problem bank & verification
 The 1000/module problems are **parametrized, auto-generated** instances (randomised numbers with computed
